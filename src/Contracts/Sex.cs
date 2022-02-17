@@ -1,4 +1,4 @@
-﻿namespace MiScaleBodyComposition.Contracts
+﻿namespace MiScaleBodyComposition
 {
     public enum Sex : byte
     {

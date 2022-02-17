@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package >
+  <metadata>
+    <id>$id$</id>
+    <version>$version$</version>
+    <title>$title$</title>
+    <authors>$author$</authors>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <licenseUrl>https://github.com/lswiderski/MiScaleBodyComposition/blob/main/LICENSE</licenseUrl>
+    <!-- <icon>icon.png</icon> -->
+    <projectUrl>https://github.com/lswiderski/MiScaleBodyComposition/</projectUrl>
+    <description>$description$</description>
+    <releaseNotes>Initial release.</releaseNotes>
+    <copyright>$copyright$</copyright>
+    <tags>xiaomi, miscale, iot</tags>
+  </metadata>
+</package>

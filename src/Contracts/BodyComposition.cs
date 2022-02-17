@@ -1,4 +1,4 @@
-﻿namespace MiScaleBodyComposition.Contracts
+﻿namespace MiScaleBodyComposition
 {
     public class BodyComposition
     {
@@ -14,7 +14,6 @@
         public double VisceralFat { get; set; }
         public double Water { get; set; }
         public int BodyType { get; set; }
-        
         public string BodyTypeName { get; set; }
         public int Day { get; set; }
         public int Month { get; set; }

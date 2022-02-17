@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using MiScaleBodyComposition.Contracts;
 
 namespace MiScaleBodyComposition
 {
@@ -202,7 +201,7 @@ namespace MiScaleBodyComposition
             return CheckValueOverflow(waterPercentage * coefficient, 35, 75);
         }
 
-        public int GetBodyType()
+        private int GetBodyType()
         {
             int factor;
             if (this.GetFatPercentage() > this.GetFatPercentageScale()[2])
