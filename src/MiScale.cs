@@ -105,9 +105,15 @@ namespace MiScaleBodyComposition
             {
                 throw new ArgumentNullException(nameof(data), "data cannot be empty");
             }
-            if (data.Length != 13)
+            
+            if (data.Length < 13)
             {
-                throw new Exception( "data must 13 bytes long");
+                throw new Exception( "data must by at least 13 bytes long");
+            }
+
+            if (data.Length > 13)
+            {
+                data = data.Skip(data.Length - 13).ToArray();
             }
 
             var ctrlByte1 = data[1];
@@ -151,6 +157,7 @@ namespace MiScaleBodyComposition
                 Month = data[4],
                 Hour = data[6],
                 Minute = data[8],
+                Year = ((data[2] & 0xFF) | ((data[3] & 0xFF) << 8) )
             };
         }
 

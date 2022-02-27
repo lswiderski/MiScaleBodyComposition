@@ -20,5 +20,7 @@
         public int Hour { get; set; }
         public int Minute { get; set; }
         
+        public int Year { get; set; }
+        
     }
 }
