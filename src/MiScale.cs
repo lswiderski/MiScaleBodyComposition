@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MiScaleBodyComposition.Exceptions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -11,6 +12,8 @@ namespace MiScaleBodyComposition
         private double _height;
         private double _age;
         private Sex _sex;
+        private const int bufferSize = 13;
+        private byte[] _data;
 
         private static MuscleMassScale[] MuscleMassScales => new[]
         {
@@ -96,45 +99,47 @@ namespace MiScaleBodyComposition
         /// <exception cref="NullReferenceException"></exception>
         public BodyComposition GetBodyComposition(byte[] data, User userInfo)
         {
-            if (userInfo is null)
+            this.CheckInput(data, userInfo);
+            var isStabilized = this.Istabilized(_data, userInfo);
+            if (!isStabilized)
             {
-                throw new ArgumentNullException(nameof(userInfo), "information about user cannot be empty");
+                throw new NotStabilizedException(
+                    "Data from mi scale are not stabilized. Wait until the end of measurement.");
             }
 
-            if (data is null)
+            var hasImpedance = this.HasImpedance(_data, userInfo);
+            if (!hasImpedance)
             {
-                throw new ArgumentNullException(nameof(data), "data cannot be empty");
-            }
-            
-            if (data.Length < 13)
-            {
-                throw new Exception( "data must by at least 13 bytes long");
+                throw new NoImpedanceException(
+                    "Impedance is missing. Try again.");
             }
 
-            if (data.Length > 13)
-            {
-                data = data.Skip(data.Length - 13).ToArray();
-            }
-
-            var ctrlByte1 = data[1];
-            var stabilized = ctrlByte1 & (1 << 5);
-            var hasImpedance = ctrlByte1 & (1 << 1);
-            if (stabilized <= 0 || hasImpedance <= 0)
-            {
-                throw new Exception(
-                    "data from mi scale are not stabilized. Wait until the end of measurement");
-            }
-
-            this._weight = this.GetWeight(data);
-            this._impedance = this.GetImpedance(data);
+            this._weight = this.GetWeight(_data);
+            this._impedance = this.GetImpedance(_data);
             this._height = userInfo.Height;
             this._age = userInfo.Age;
             this._sex = userInfo.Sex;
 
-            return this.GetBodyComposition(data);
+            return this.GetBodyComposition();
         }
 
-        private BodyComposition GetBodyComposition(byte[] data)
+        public bool Istabilized(byte[] data, User userInfo)
+        {
+            this.CheckInput(data, userInfo);
+            var ctrlByte1 = _data[1];
+            var stabilized = ctrlByte1 & (1 << 5);
+            return stabilized > 0;
+        }
+
+        public bool HasImpedance(byte[] data, User userInfo)
+        {
+            this.CheckInput(data, userInfo);
+            var ctrlByte1 = _data[1];
+            var hasImpedance = ctrlByte1 & (1 << 1);
+            return hasImpedance > 0;
+        }
+
+        private BodyComposition GetBodyComposition()
         {
             var bodyType = this.GetBodyType();
             
@@ -153,12 +158,37 @@ namespace MiScaleBodyComposition
                 Water = Math.Round(this.GetWater(),1),
                 BodyType = bodyType+1,
                 BodyTypeName = BodyTypeScale[bodyType],
-                Day = data[5],
-                Month = data[4],
-                Hour = data[6],
-                Minute = data[8],
-                Year = ((data[2] & 0xFF) | ((data[3] & 0xFF) << 8) )
+                Day = _data[5],
+                Month = _data[4],
+                Hour = _data[6],
+                Minute = _data[8],
+                Year = ((_data[2] & 0xFF) | ((_data[3] & 0xFF) << 8) )
             };
+        }
+
+        private void CheckInput(byte[] data, User userInfo)
+        {
+            if (userInfo is null)
+            {
+                throw new ArgumentNullException(nameof(userInfo), "information about user cannot be empty");
+            }
+
+            if (data is null)
+            {
+                throw new ArgumentNullException(nameof(data), "data cannot be empty");
+            }
+
+            if (data.Length < bufferSize)
+            {
+                throw new DataLengthException($"data must by at least {bufferSize} bytes long");
+            }
+
+            if (data.Length > bufferSize)
+            {
+                data = data.Skip(data.Length - bufferSize).ToArray();
+            }
+
+            _data = data;
         }
 
         private double CheckValueOverflow(double value, double min, double max)
