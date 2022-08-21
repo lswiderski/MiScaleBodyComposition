@@ -16,7 +16,7 @@ namespace MiScaleBodyComposition.UnitTests
         [SetUp]
         public void Setup()
         {
-            _validMiScaleData = new byte[] { 166, 60, 55, 230, 7, 2, 11, 17, 34, 7 };
+            _validMiScaleData = new byte[] { 29,24, 166, 60, 55, 230, 7, 2, 11, 17, 34, 7 };
             _height = 182;
         }
 

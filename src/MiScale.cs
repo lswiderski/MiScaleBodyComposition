@@ -108,17 +108,18 @@ namespace MiScaleBodyComposition
             }
 
             var hasImpedance = this.HasImpedance(_data, userInfo);
-            if (!hasImpedance)
-            {
-                throw new NoImpedanceException(
-                    "Impedance is missing. Try again.");
-            }
-
+           
             this._weight = this.GetWeight(_data);
-            this._impedance = this.GetImpedance(_data);
             this._height = userInfo.Height;
             this._age = userInfo.Age;
             this._sex = userInfo.Sex;
+
+            if (!hasImpedance)
+            {
+                return this.GetBodyCompositionWithoutImpedance();
+            }
+
+            this._impedance = this.GetImpedance(_data);
 
             return this.GetBodyComposition();
         }
@@ -137,6 +138,22 @@ namespace MiScaleBodyComposition
             var ctrlByte1 = _data[1];
             var hasImpedance = ctrlByte1 & (1 << 1);
             return hasImpedance > 0;
+        }
+
+        private BodyComposition GetBodyCompositionWithoutImpedance()
+        {
+            return new BodyComposition
+            {
+                Weight = _weight,
+                BMI = Math.Round(this.GetBmi(), 1),
+                IdealWeight = Math.Round(this.GetIdealWeight(), 2),
+                BMR = Math.Round(this.GetBmr(), 0),
+                Day = _data[5],
+                Month = _data[4],
+                Hour = _data[6],
+                Minute = _data[8],
+                Year = ((_data[2] & 0xFF) | ((_data[3] & 0xFF) << 8))
+            };
         }
 
         private BodyComposition GetBodyComposition()
