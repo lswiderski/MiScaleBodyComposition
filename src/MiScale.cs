@@ -1,4 +1,4 @@
-﻿using MiScaleBodyComposition.Exceptions;
+using MiScaleBodyComposition.Exceptions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -178,8 +178,8 @@ namespace MiScaleBodyComposition
                 Day = _data[5],
                 Month = _data[4],
                 Hour = _data[6],
-                Minute = _data[8],
-                Year = ((_data[2] & 0xFF) | ((_data[3] & 0xFF) << 8) )
+                Minute = _data[7],
+                Second = _data[8]
             };
         }
 
