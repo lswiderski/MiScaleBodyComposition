@@ -142,45 +142,52 @@ namespace MiScaleBodyComposition
 
         private BodyComposition GetBodyCompositionWithoutImpedance()
         {
-            return new BodyComposition
+            var bodyComposition = new BodyComposition
             {
                 Weight = _weight,
                 BMI = Math.Round(this.GetBmi(), 1),
                 IdealWeight = Math.Round(this.GetIdealWeight(), 2),
                 BMR = Math.Round(this.GetBmr(), 0),
-                Day = _data[5],
-                Month = _data[4],
-                Hour = _data[6],
-                Minute = _data[7],
-                Second = _data[8]
             };
+            bodyComposition = this.SetDate(bodyComposition);
+            return bodyComposition;
         }
 
         private BodyComposition GetBodyComposition()
         {
             var bodyType = this.GetBodyType();
             
-            return new BodyComposition
+            var bodyComposition = new BodyComposition
             {
                 Weight = _weight,
-                BMI =  Math.Round(this.GetBmi(),1),
-                ProteinPercentage = Math.Round(this.GetProteinPercentage(),1),
-                IdealWeight = Math.Round(this.GetIdealWeight(),2),
-                BMR = Math.Round(this.GetBmr(),0),
-                BoneMass = Math.Round(this.GetBoneMass(),2),
-                Fat = Math.Round(this.GetFatPercentage(),1),
-                MetabolicAge = Math.Round(this.GetMetabolicAge(),0),
-                MuscleMass = Math.Round(this.GetMuscleMass(),2),
-                VisceralFat = Math.Round(this.GetVisceralFat(),0),
-                Water = Math.Round(this.GetWater(),1),
-                BodyType = bodyType+1,
+                BMI = Math.Round(this.GetBmi(), 1),
+                ProteinPercentage = Math.Round(this.GetProteinPercentage(), 1),
+                IdealWeight = Math.Round(this.GetIdealWeight(), 2),
+                BMR = Math.Round(this.GetBmr(), 0),
+                BoneMass = Math.Round(this.GetBoneMass(), 2),
+                Fat = Math.Round(this.GetFatPercentage(), 1),
+                MetabolicAge = Math.Round(this.GetMetabolicAge(), 0),
+                MuscleMass = Math.Round(this.GetMuscleMass(), 2),
+                VisceralFat = Math.Round(this.GetVisceralFat(), 0),
+                Water = Math.Round(this.GetWater(), 1),
+                BodyType = bodyType + 1,
                 BodyTypeName = BodyTypeScale[bodyType],
-                Day = _data[5],
-                Month = _data[4],
-                Hour = _data[6],
-                Minute = _data[7],
-                Second = _data[8]
             };
+
+            bodyComposition = this.SetDate(bodyComposition);
+            return bodyComposition;
+        }
+
+        private BodyComposition SetDate(BodyComposition bc)
+        {
+            bc.Day = _data[5];
+            bc.Month = _data[4];
+            bc.Hour = _data[6];
+            bc.Minute = _data[7];
+            bc.Second = _data[8];
+            bc.Year = ((_data[2] & 0xFF) | ((_data[3] & 0xFF) << 8));
+
+            return bc;
         }
 
         private void CheckInput(byte[] data, User userInfo)
