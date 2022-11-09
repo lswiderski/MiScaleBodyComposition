@@ -97,18 +97,18 @@ namespace MiScaleBodyComposition
         /// <param name="userInfo"></param>
         /// <returns></returns>
         /// <exception cref="NullReferenceException"></exception>
-        public BodyComposition GetBodyComposition(byte[] data, User userInfo)
+        public BodyComposition GetBodyComposition(byte[] data, User userInfo, bool doNotCheckStabilization = false)
         {
             this.CheckInput(data, userInfo);
             var isStabilized = this.Istabilized(_data, userInfo);
-            if (!isStabilized)
+            if (!doNotCheckStabilization && !isStabilized)
             {
                 throw new NotStabilizedException(
                     "Data from mi scale are not stabilized. Wait until the end of measurement.");
             }
 
             var hasImpedance = this.HasImpedance(_data, userInfo);
-           
+
             this._weight = this.GetWeight(_data);
             this._height = userInfo.Height;
             this._age = userInfo.Age;
@@ -156,7 +156,7 @@ namespace MiScaleBodyComposition
         private BodyComposition GetBodyComposition()
         {
             var bodyType = this.GetBodyType();
-            
+
             var bodyComposition = new BodyComposition
             {
                 Weight = _weight,
@@ -186,7 +186,7 @@ namespace MiScaleBodyComposition
             bc.Minute = _data[7];
             bc.Second = _data[8];
             bc.Year = ((_data[2] & 0xFF) | ((_data[3] & 0xFF) << 8));
-            bc.Date = new DateTime(bc.Year,bc.Month,bc.Day,bc.Hour,bc.Minute,bc.Second);
+            bc.Date = new DateTime(bc.Year, bc.Month, bc.Day, bc.Hour, bc.Minute, bc.Second);
 
             return bc;
         }
@@ -229,7 +229,7 @@ namespace MiScaleBodyComposition
 
             return value;
         }
-        
+
         private double GetWeight(byte[] data)
         {
             return (((data[12] & 0xFF) << 8) | (data[11] & 0xFF)) * 0.005;

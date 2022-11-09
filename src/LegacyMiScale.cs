@@ -14,15 +14,16 @@ namespace MiScaleBodyComposition
 
         private const int bufferSize = 10;
 
-        public BodyComposition GetWeight(byte[] data, double height)
+        public BodyComposition GetWeight(byte[] data, double height, bool doNotCheckStabilization = false)
         {
             CheckInput(data);
             var isStabilized = this.Istabilized(_data);
-            if (!isStabilized)
+            if (!doNotCheckStabilization && !isStabilized)
             {
                 throw new NotStabilizedException(
                     "Data from mi scale are not stabilized. Wait until the end of measurement");
             }
+
             this._weight = this.CalculateWeight(_data);
             this._height = height;
 
