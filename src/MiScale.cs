@@ -186,6 +186,7 @@ namespace MiScaleBodyComposition
             bc.Minute = _data[7];
             bc.Second = _data[8];
             bc.Year = ((_data[2] & 0xFF) | ((_data[3] & 0xFF) << 8));
+            bc.Date = new DateTime(bc.Year,bc.Month,bc.Day,bc.Hour,bc.Minute,bc.Second);
 
             return bc;
         }
