@@ -168,7 +168,7 @@ namespace MiScaleBodyComposition
                 Fat = Math.Round(this.GetFatPercentage(), 1),
                 MetabolicAge = Math.Round(this.GetMetabolicAge(), 0),
                 MuscleMass = Math.Round(this.GetMuscleMass(), 2),
-                VisceralFat = Math.Round(this.GetVisceralFat(), 0),
+                VisceralFat = Math.Round(this.GetVisceralFat(), 2),
                 Water = Math.Round(this.GetWater(), 1),
                 BodyType = bodyType + 1,
                 BodyTypeName = BodyTypeScale[bodyType],
