@@ -23,6 +23,8 @@ namespace MiScaleBodyComposition
         public int Hour { get; set; }
         public int Minute { get; set; }
         public int Second { get; set; }
+        public double? Impedance { get; set; }
+        public double? HeartRate { get; set; }
         public DateTime Date { get; set; }
     }
 }
