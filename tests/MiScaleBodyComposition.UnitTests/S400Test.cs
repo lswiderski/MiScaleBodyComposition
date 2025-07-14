@@ -39,6 +39,18 @@ namespace MiScaleBodyComposition.UnitTests
         }
 
         [Test]
+        public void Test26bytes()
+        {
+            double expectedResult = 73.2;
+            _inputData.DataString = "95FE4859D53B3BDE6BC8D05B51C0CDFD9021C9000000925C5039".ToLower().Replace(" ", "");
+            var scale = new S400();
+
+            var bc = scale.GetBodyComposition(_userInfo, _inputData);
+            Assert.AreEqual(expectedResult, bc.Weight);
+        }
+      
+
+        [Test]
         public void TestJustMACAddress()
         {
             _inputData.DataString = "10 59 d5 3b 06 e6 a5 64 93 46 84".ToLower().Replace(" ", "");

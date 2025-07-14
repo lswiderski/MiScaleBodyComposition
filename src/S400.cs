@@ -19,6 +19,7 @@ namespace MiScaleBodyComposition
         private const string ImpedanceLow = "impedanceLow";
 
         private const int bufferSize = 24;
+        private byte[] _data;
 
         private double _weight;
         private double _impedance;
@@ -60,16 +61,16 @@ namespace MiScaleBodyComposition
                              .ToArray();
         }
 
-        private void Parse(byte[] data, string macOriginal, string aesKey)
+        private void Parse(string macOriginal, string aesKey)
         {
             byte[] mac = StringToByteArray(macOriginal.Replace(":", ""));
 
             byte[] xiaomiMac = mac;
             byte[] associatedData = new byte[] { 0x11 };
-            byte[] nonce = xiaomiMac.Reverse().Concat(data.Skip(2).Take(3)).Concat(data.Skip(data.Length - 7).Take(3)).ToArray();
-            byte[] mic = data.Skip(data.Length - 4).Take(4).ToArray();
+            byte[] nonce = xiaomiMac.Reverse().Concat(_data.Skip(2).Take(3)).Concat(_data.Skip(_data.Length - 7).Take(3)).ToArray();
+            byte[] mic = _data.Skip(_data.Length - 4).Take(4).ToArray();
             int i = 5;
-            byte[] encryptedPayload = data.Skip(i).Take(data.Length - i - 7).ToArray();
+            byte[] encryptedPayload = _data.Skip(i).Take(_data.Length - i - 7).ToArray();
 
             byte[] bindKey = StringToByteArray(aesKey);
 
@@ -82,8 +83,6 @@ namespace MiScaleBodyComposition
             byte[] decryptedPayload = new byte[ccm.GetOutputSize(cipherText.Length)];
             int len = ccm.ProcessBytes(cipherText, 0, cipherText.Length, decryptedPayload, 0);
             ccm.DoFinal(decryptedPayload, len);
-
-            Console.WriteLine($"Decrypted payload (hex): {BitConverter.ToString(decryptedPayload).Replace("-", "").ToLower()}");
 
             byte[] obj = new byte[9]; // 12 - 3 = 9 bytes
             Array.Copy(decryptedPayload, 3, obj, 0, 9);
@@ -100,10 +99,6 @@ namespace MiScaleBodyComposition
                 Array.Reverse(slice);
                 value = BitConverter.ToInt32(slice, 0);
             }
-
-            //byte[] dobject = decryptedPayload.Skip(3).Take(9).ToArray();
-           // int value = dobject.Skip(1).Take(4).Aggregate(0, (acc, b) => (acc << 8) | b);
-           // value = dobject[1] | (dobject[2] << 8) | (dobject[3] << 16) | (dobject[4] << 32);
 
             this.ParseValue(value);
         }
@@ -145,14 +140,14 @@ namespace MiScaleBodyComposition
             _height = userInfo.Height;
             _age = userInfo.Age;
             _sex = userInfo.Sex;
-            var data = inputData.Data is null ? StringToByteArray(inputData.DataString) : inputData.Data;
+            _data = inputData.Data is null ? StringToByteArray(inputData.DataString) : inputData.Data;
             
-            if(!CheckInput(data, userInfo))
+            if(!CheckInput(userInfo))
             {
                 return null;
             }
 
-            this.Parse(data, inputData.MacOriginal, inputData.AesKey);
+            this.Parse(inputData.MacOriginal, inputData.AesKey);
 
             if(sensors.ContainsKey(Weight) && sensors[Weight] != 0)
             {
@@ -266,19 +261,26 @@ namespace MiScaleBodyComposition
             "balanced-skinny", "skinny-muscular"
         };
 
-        private bool CheckInput(byte[] data, User userInfo)
+        private bool CheckInput( User userInfo)
         {
             if (userInfo is null)
             {
                 throw new ArgumentNullException(nameof(userInfo), "information about user cannot be empty");
             }
 
-            if (data is null)
+            if (_data is null)
             {
-                throw new ArgumentNullException(nameof(data), "data cannot be empty");
+                throw new ArgumentNullException(nameof(_data), "data cannot be empty");
             }
 
-            if (data.Length != bufferSize)
+            if (_data.Length == (bufferSize + 2))
+            {
+                byte[] fixedData = new byte[_data.Length - 2];
+                Array.Copy(_data, 2, fixedData, 0, fixedData.Length);
+                _data = fixedData;
+            }
+
+            if (_data.Length != bufferSize)
             {
                 return false;
             }
