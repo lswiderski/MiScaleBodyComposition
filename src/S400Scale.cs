@@ -1,19 +1,20 @@
-﻿using MiScaleBodyComposition.Exceptions;
+﻿using MiScaleBodyComposition.Contracts;
+using MiScaleBodyComposition.Exceptions;
+using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Crypto.Modes;
+using Org.BouncyCastle.Crypto.Parameters;
+using Org.BouncyCastle.Security;
+using Org.BouncyCastle.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Org.BouncyCastle.Crypto;
-using Org.BouncyCastle.Crypto.Parameters;
-using Org.BouncyCastle.Crypto.Modes;
-using Org.BouncyCastle.Security;
-using MiScaleBodyComposition.Contracts;
 
 namespace MiScaleBodyComposition
 {
-    public class S400
+    public class S400Scale
     {
-        private const string Weight ="weight";
+        private const string Weight = "weight";
         private const string HeartRate = "heartRate";
         private const string Impedance = "impedance";
         private const string ImpedanceLow = "impedanceLow";
@@ -55,10 +56,24 @@ namespace MiScaleBodyComposition
 
         public static byte[] StringToByteArray(string hex)
         {
-            return Enumerable.Range(0, hex.Length)
-                             .Where(x => x % 2 == 0)
-                             .Select(x => Convert.ToByte(hex.Substring(x, 2), 16))
-                             .ToArray();
+            if (string.IsNullOrEmpty(hex) || hex.Length % 2 != 0)
+            {
+                return Array.Empty<byte>();
+            }
+
+            // Remove any potential whitespace
+            hex = hex.Trim();
+
+            var bytes = new byte[hex.Length / 2];
+            for (int i = 0; i < bytes.Length; i++)
+            {
+                // Convert each pair of hex chars to byte
+                byte.TryParse(hex.Substring(i * 2, 2),
+                     System.Globalization.NumberStyles.HexNumber,
+                     null, out bytes[i]);
+            }
+
+            return bytes;
         }
 
         private void Parse(string macOriginal, string aesKey)
@@ -141,15 +156,15 @@ namespace MiScaleBodyComposition
             _age = userInfo.Age;
             _sex = userInfo.Sex;
             _data = inputData.Data is null ? StringToByteArray(inputData.DataString) : inputData.Data;
-            
-            if(!CheckInput(userInfo))
+
+            if (!CheckInput(userInfo))
             {
                 return null;
             }
 
             this.Parse(inputData.MacOriginal, inputData.AesKey);
 
-            if(sensors.ContainsKey(Weight) && sensors[Weight] != 0)
+            if (sensors.ContainsKey(Weight) && sensors[Weight] != 0)
             {
                 var bc = GetBodyComposition();
                 return bc;
@@ -261,7 +276,7 @@ namespace MiScaleBodyComposition
             "balanced-skinny", "skinny-muscular"
         };
 
-        private bool CheckInput( User userInfo)
+        private bool CheckInput(User userInfo)
         {
             if (userInfo is null)
             {

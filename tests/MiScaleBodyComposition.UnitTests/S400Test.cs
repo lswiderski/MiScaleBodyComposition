@@ -23,7 +23,6 @@ namespace MiScaleBodyComposition.UnitTests
             {
                 MacOriginal = "84:46:93:64:A5:E6",
                 AesKey = "58305740b64e4b425e518aa1f4e51339",
-                DataString = "4859d53b2d3314943c58b133638c7457a4000000c3e670dc".ToLower().Replace(" ", "")
             };
         }
 
@@ -32,7 +31,18 @@ namespace MiScaleBodyComposition.UnitTests
         {
             double expectedResult = 74.2;
             _inputData.DataString = "4859d53b2d3314943c58b133638c7457a4000000c3e670dc".ToLower().Replace(" ", "");
-            var scale = new S400();
+            var scale = new S400Scale();
+
+            var bc = scale.GetBodyComposition(_userInfo, _inputData);
+            Assert.AreEqual(expectedResult, bc.Weight);
+        }
+
+        [Test]
+        public void Test26bytesHex()
+        {
+            double expectedResult = 73.2;
+            _inputData.DataString = "95FE4859D53B3BDE6BC8D05B51C0CDFD9021C9000000925C5039".ToLower().Replace(" ", "");
+            var scale = new S400Scale();
 
             var bc = scale.GetBodyComposition(_userInfo, _inputData);
             Assert.AreEqual(expectedResult, bc.Weight);
@@ -41,20 +51,20 @@ namespace MiScaleBodyComposition.UnitTests
         [Test]
         public void Test26bytes()
         {
-            double expectedResult = 73.2;
-            _inputData.DataString = "95FE4859D53B3BDE6BC8D05B51C0CDFD9021C9000000925C5039".ToLower().Replace(" ", "");
-            var scale = new S400();
+            double expectedResult = 73.3;
+            _inputData.Data = new byte[] { 149, 254,72,89,213,59,77,111,53,156,229,111,31,126,126,10,221,220,38,0,0,0,12,19,211,196 };
+            var scale = new S400Scale();
 
             var bc = scale.GetBodyComposition(_userInfo, _inputData);
             Assert.AreEqual(expectedResult, bc.Weight);
         }
-      
+
 
         [Test]
         public void TestJustMACAddress()
         {
             _inputData.DataString = "10 59 d5 3b 06 e6 a5 64 93 46 84".ToLower().Replace(" ", "");
-            var scale = new S400();
+            var scale = new S400Scale();
 
             var value = scale.GetBodyComposition(_userInfo, _inputData);
             Assert.AreEqual(null, value);
@@ -64,7 +74,7 @@ namespace MiScaleBodyComposition.UnitTests
         public void TestNoWeight()
         {
             _inputData.DataString = "4859d53b2e724a8c783dc8a392c10db411000000a8a7bad5".ToLower().Replace(" ", "");
-            var scale = new S400();
+            var scale = new S400Scale();
 
             var value = scale.GetBodyComposition(_userInfo, _inputData);
 
@@ -75,7 +85,7 @@ namespace MiScaleBodyComposition.UnitTests
         public void Test2DataStrings()
         {
             _inputData.DataString = "4859d53b2e724a8c783dc8a392c10db411000000a8a7bad5".ToLower().Replace(" ", "");
-            var scale = new S400();
+            var scale = new S400Scale();
 
             var value = scale.GetBodyComposition(_userInfo, _inputData);
             _inputData.DataString = "4859d53b2d3314943c58b133638c7457a4000000c3e670dc".ToLower().Replace(" ", "");
