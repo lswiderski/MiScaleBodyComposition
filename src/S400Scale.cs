@@ -54,31 +54,24 @@ namespace MiScaleBodyComposition
             return null;
         }
 
-        public static byte[] StringToByteArray(string hex)
+        private static byte[] StringToByteArray(string hex)
         {
-            if (string.IsNullOrEmpty(hex) || hex.Length % 2 != 0)
-            {
-                return Array.Empty<byte>();
-            }
-
-            // Remove any potential whitespace
+            // Remove any potential whitespace  
             hex = hex.Trim();
 
-            var bytes = new byte[hex.Length / 2];
-            for (int i = 0; i < bytes.Length; i++)
+            hex = hex.Replace(" ", ""); // Remove spaces if any
+            int length = hex.Length;
+            byte[] bytes = new byte[length / 2];
+            for (int i = 0; i < length; i += 2)
             {
-                // Convert each pair of hex chars to byte
-                byte.TryParse(hex.Substring(i * 2, 2),
-                     System.Globalization.NumberStyles.HexNumber,
-                     null, out bytes[i]);
+                // Convert each pair of hex digits to a byte
+                bytes[i / 2] = Convert.ToByte(hex.Substring(i, 2), 16);
             }
-
             return bytes;
         }
 
-        private void Parse(string macOriginal, string aesKey)
+        private void Parse(byte[] mac, byte[] bindKey)
         {
-            byte[] mac = StringToByteArray(macOriginal.Replace(":", ""));
 
             byte[] xiaomiMac = mac;
             byte[] associatedData = new byte[] { 0x11 };
@@ -87,8 +80,10 @@ namespace MiScaleBodyComposition
             int i = 5;
             byte[] encryptedPayload = _data.Skip(i).Take(_data.Length - i - 7).ToArray();
 
-            byte[] bindKey = StringToByteArray(aesKey);
-
+            if(mac is null || bindKey is null)
+            {
+                return;
+            }
             // AES-CCM decryption
             CcmBlockCipher ccm = new CcmBlockCipher(new Org.BouncyCastle.Crypto.Engines.AesEngine());
             AeadParameters parameters = new AeadParameters(new KeyParameter(bindKey), 32, nonce, associatedData);
@@ -98,6 +93,7 @@ namespace MiScaleBodyComposition
             byte[] decryptedPayload = new byte[ccm.GetOutputSize(cipherText.Length)];
             int len = ccm.ProcessBytes(cipherText, 0, cipherText.Length, decryptedPayload, 0);
             ccm.DoFinal(decryptedPayload, len);
+            Console.WriteLine($"decryptedPayload: {string.Join("; ", decryptedPayload)}");
 
             byte[] obj = new byte[9]; // 12 - 3 = 9 bytes
             Array.Copy(decryptedPayload, 3, obj, 0, 9);
@@ -108,11 +104,11 @@ namespace MiScaleBodyComposition
 
             // Convert the 4 bytes to an integer (little-endian)
             int value = BitConverter.ToInt32(slice, 0);
-
             if (!BitConverter.IsLittleEndian)
             {
                 Array.Reverse(slice);
                 value = BitConverter.ToInt32(slice, 0);
+                Console.WriteLine($"reverse value: {string.Join(";", value)}");
             }
 
             this.ParseValue(value);
@@ -162,7 +158,10 @@ namespace MiScaleBodyComposition
                 return null;
             }
 
-            this.Parse(inputData.MacOriginal, inputData.AesKey);
+            var mac = inputData.MacBytes ?? StringToByteArray(inputData.MacOriginal.Replace(":", ""));
+            var aesKey = inputData.AesKeyBytes ?? StringToByteArray(inputData.AesKey);
+
+            this.Parse(mac, aesKey);
 
             if (sensors.ContainsKey(Weight) && sensors[Weight] != 0)
             {
@@ -175,8 +174,18 @@ namespace MiScaleBodyComposition
 
         private BodyComposition GetBodyComposition()
         {
-            var bodyType = this.GetBodyType();
+            var impedance = GetSensorValue(Impedance);
+            if (impedance == null || impedance == 0)
+            {
+                return new BodyComposition
+                {
+                    Weight = GetSensorValue(Weight) ?? 0,
+                    Date = DateTime.Now,
+                    Impedance = null,
+                };
+            }
 
+            var bodyType = this.GetBodyType();
             var bodyComposition = new BodyComposition
             {
                 Weight = GetSensorValue(Weight) ?? 0,

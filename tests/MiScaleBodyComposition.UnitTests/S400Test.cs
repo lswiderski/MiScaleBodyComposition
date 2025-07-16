@@ -59,6 +59,17 @@ namespace MiScaleBodyComposition.UnitTests
             Assert.AreEqual(expectedResult, bc.Weight);
         }
 
+        [Test]
+        public void Test26bytesOnlyWeight()
+        {
+            _inputData.Data = new byte[] { 149, 254, 72, 89, 213, 59, 99, 187, 88, 121, 80, 225, 4, 44, 172, 28, 95, 24, 246, 0, 0, 0, 219, 233, 112, 52 };
+            var scale = new S400Scale();
+
+            var bc = scale.GetBodyComposition(_userInfo, _inputData);
+            var condition = bc.Weight > 0 && bc.Impedance == null;
+
+            Assert.AreEqual(true, condition);
+        }
 
         [Test]
         public void TestJustMACAddress()
